@@ -6,25 +6,48 @@
 #include <string>
 #include <cstdint>
 
-namespace miniplc0 {
+namespace cc0 {
 
 	enum TokenType {
 		NULL_TOKEN,
-		UNSIGNED_INTEGER,
 		IDENTIFIER,
-		BEGIN,
-		END,
-		VAR,
+
+		//关键字
 		CONST,
+		VOID,
+		INT,
+		IF,
+		ELSE,
+		WHILE,
+		RETURN,
+		SCAN,
 		PRINT,
+
+		//保留字
+		RESERVED_WORD,
+
+		//符号
 		PLUS_SIGN,
 		MINUS_SIGN,
 		MULTIPLICATION_SIGN,
 		DIVISION_SIGN,
-		EQUAL_SIGN,
-		SEMICOLON,
-		LEFT_BRACKET,
-		RIGHT_BRACKET
+		EQUAL_SIGN,// =
+		JUDGE_EQUAL_SIGN,// ==
+		LESS_SIGN,// <
+		LESS_EQUAL_SIGN,// <=
+		MORE_SIGN,// >
+		MORE_EQUAL_SIGN,// >=
+		NO_EQUAL_SIGN,// !=
+		SEMICOLON,// ;
+		COMMA,// ,
+		LEFT_BRACE, // {
+		RIGHT_BRACE, // }
+		LEFT_BRACKET,// (
+		RIGHT_BRACKET,// )
+
+		//整数
+		DECIMAL_LITERAL,
+		HEXADECIMAL_LITERAL
 	};
 
 	class Token final {

@@ -11,7 +11,15 @@
 #include <cstdint>
 #include <cstddef> // for std::size_t
 
-namespace miniplc0 {
+//指令字符串数组
+extern std::string command[20][1000];
+extern int order;
+//二进制指令字符串数组
+extern std::string TwoCommand[3];
+extern std::string TwoFuncCommand[20][1000];
+extern int Torder;
+
+namespace cc0 {
 
 	class Analyser final {
 	private:
@@ -21,40 +29,63 @@ namespace miniplc0 {
 		using int32_t = std::int32_t;
 	public:
 		Analyser(std::vector<Token> v)
-			: _tokens(std::move(v)), _offset(0), _instructions({}), _current_pos(0, 0),
-			_uninitialized_vars({}), _vars({}), _consts({}), _nextTokenIndex(0) {}
+			: _tokens(std::move(v)), _offset(0), _instructions({}), _current_pos(0, 0) {}
 		Analyser(Analyser&&) = delete;
 		Analyser(const Analyser&) = delete;
 		Analyser& operator=(Analyser) = delete;
 
 		// 唯一接口
 		std::pair<std::vector<Instruction>, std::optional<CompilationError>> Analyse();
+
+		
 	private:
 		// 所有的递归子程序
 
 		// <程序>
 		std::optional<CompilationError> analyseProgram();
-		// <主过程>
-		std::optional<CompilationError> analyseMain();
+		// 变量
+		std::optional<CompilationError> analyse_variable();
 		// <常量声明>
 		std::optional<CompilationError> analyseConstantDeclaration();
 		// <变量声明>
 		std::optional<CompilationError> analyseVariableDeclaration();
-		// <语句序列>
-		std::optional<CompilationError> analyseStatementSequence();
-		// <常表达式>
-		// 这里的 out 是常表达式的值
-		std::optional<CompilationError> analyseConstantExpression(int32_t& out);
-		// <表达式>
-		std::optional<CompilationError> analyseExpression();
+		// <加法表达式>
+		std::optional<CompilationError> analyseAdditiveExpression();
 		// <赋值语句>
 		std::optional<CompilationError> analyseAssignmentStatement();
 		// <输出语句>
 		std::optional<CompilationError> analyseOutputStatement();
-		// <项>
-		std::optional<CompilationError> analyseItem();
-		// <因子>
-		std::optional<CompilationError> analyseFactor();
+		// 乘法表达式
+		std::optional<CompilationError> analyseMultiplicativeExpression();
+		// <一元表达式>
+		std::optional<CompilationError> analyseUnaryExpression();
+
+		//<函数调用>
+		std::optional<CompilationError> analyseFunctionCall(const std::string&);
+		//<函数定义>
+		std::optional<CompilationError> analyseFunctionDeclaration();
+		//<参数声明>
+		std::optional<CompilationError> analyseParameterDeclaration();
+		//<复合语句>
+		std::optional<CompilationError> analyseCompoundStatement();
+		//<语句序列>
+		std::optional<CompilationError> analyseStatementSeq();
+		//<语句>
+		std::optional<CompilationError> analyseStatement();
+		//<条件语句>
+		std::optional<CompilationError> analyseConditionStatement();
+		//<条件>
+		std::optional<CompilationError> analyseCondition(int&,int&);
+		//<循环语句>
+		std::optional<CompilationError> analyseLoopStatement();
+		//<可打印列表>
+		std::optional<CompilationError> analysePrintableList();
+		//二进制过程的函数
+		//将数字转换为十六进制的字符串，参数并给出位数(十进制数字，传回的字符串，要求转换的位数)
+		std::string TenToSixteen(int ,int ); 
+		//将十六进制转换为十六进制字符串，固定转换位数
+		std::string SixteenToSixteen(std::string,int);
+
 
 		// Token 缓冲区相关操作
 
@@ -66,36 +97,97 @@ namespace miniplc0 {
 		// 下面是符号表相关操作
 
 		// helper function
-		void _add(const Token&, std::map<std::string, int32_t>&);
-		// 添加变量、常量、未初始化的变量
-		void addVariable(const Token&);
-		void addConstant(const Token&);
-		void addUninitializedVariable(const Token&);
-		// 是否被声明过
+		// 添加变量、常量
+		void addVariable(const std::string&);
+		void addConstant(const std::string&);
+		// 判断变量名是否被声明过
 		bool isDeclared(const std::string&);
-		// 是否是未初始化的变量
-		bool isUninitializedVariable(const std::string&);
-		// 是否是已初始化的变量
-		bool isInitializedVariable(const std::string&);
+		// 是否是变量
+		bool isVariable(const std::string&);
 		// 是否是常量
 		bool isConstant(const std::string&);
-		// 获得 {变量，常量} 在栈上的偏移
-		int32_t getIndex(const std::string&);
+		//获取变量与当前层级的层级差
+		int getLevelDifference(const std::string&);
+		//获取变量的地址偏移量
+		int getOffset(const std::string&);
+		//是否是函数名
+		bool isFunctionName(const std::string&);
+
+		std::string getFunctionType(const std::string&);//根据函数名获取函数的类型
+		int getParametersNumber(const std::string&);//根据函数名获取函数的参数个数
+		int getFunctionIndex(const std::string&);
+
+		//是否是level = 0的变量
+		bool isDeclared_inLevel0(const std::string&);
+		//是否是level = 1的变量
+		bool isDeclared_inLevel1(const std::string&);
+		//将函数放进常量表
+		void addFunctionToConstTable(const std::string&);
+		//将函数放进函数表里
+		void addFunctionToFunctionTable(const std::string&);
+		//清空函数表中二级标识符
+		void EmptySymbolLegend();
+		//判断函数名是否被声明过
+		bool FunctionIsDeclared(const std::string&);
+
+
+
 	private:
 		std::vector<Token> _tokens;
 		std::size_t _offset;
 		std::vector<Instruction> _instructions;
 		std::pair<uint64_t, uint64_t> _current_pos;
 
-		// 为了简单处理，我们直接把符号表耦合在语法分析里
-		// 变量                   示例
-		// _uninitialized_vars    var a;
-		// _vars                  var a=1;
-		// _consts                const a=1;
-		std::map<std::string, int32_t> _uninitialized_vars;
-		std::map<std::string, int32_t> _vars;
-		std::map<std::string, int32_t> _consts;
-		// 下一个 token 在栈的偏移
-		int32_t _nextTokenIndex;
+
+		//符号表定义
+		struct SymbolLegend{
+			int level;//级
+			std::string name;//变量名
+			int index;//偏移量
+			bool change;//能否改变
+		};
+		SymbolLegend SL[1000];
+		int nextSymbolLegendIndex;//当前变量的偏移量
+
+		int NowLevel;//当前程序所在的等级
+
+
+		//常量表定义
+		struct _ConstTable{
+			int index;
+			std::string type;
+			std::string name;
+		};
+		_ConstTable ConstTable[1000];
+		//常量表中函数名的index
+		int Constindex;
+
+		//函数表中函数名的index
+		int Functionindex;
+		//函数的大小
+		int FunctionSize;
+		//函数的参数个数
+		int numberOfParameters;
+		//函数的名字
+		std::string FunctionName;
+		//函数的类型
+		std::string FunctionType;
+
+		//函数表定义
+		struct _FunctionTable{
+			int index;
+			std::string name;
+			int size;
+			int level;
+
+			std::string type;//void || int
+			int parameters_number; 
+		};
+		_FunctionTable FunctionTable[1000];
+
+		//函数第几个
+		int numberFunction;
+		//有没有return语句
+		bool hasReturn;
 	};
 }

@@ -3,7 +3,7 @@
 #include <cstdint>
 #include <utility>
 
-namespace miniplc0 {
+namespace cc0 {
 
 	enum Operation {
 		ILL = 0,
@@ -33,6 +33,7 @@ namespace miniplc0 {
 
 		Operation GetOperation() const { return _opr; }
 		int32_t GetX() const { return _x; }
+
 	private:
 		Operation _opr;
 		int32_t _x;
