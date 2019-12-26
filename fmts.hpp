@@ -73,8 +73,70 @@ namespace fmt {
 			case cc0::ErrLeadingZero:
 				name = "Decimal integer literals other than 0 cannot have any leading 0.";
 				break;
-
+			case cc0::Err1:
+				name = "Functions cannot be redefined inside functions.";
+				break;
+			case cc0::Err2:
+				name = "Missing int type";
+				break;
+			case cc0::Err3:
+				name = "Expression is missing content";
+				break;
+			case cc0::Err4:
+				name = "Function name not defined";
+				break;
+			case cc0::Err5:
+				name = "Void function cannot participate in operation";
+				break;
+			case cc0::Err6:
+				name = "Inside the function has the same variable name as the called function name, and the function cannot be called.";
+				break;
+			case cc0::Err7:
+				name = "Missing LEFT BRACKET";
+				break;
+			case cc0::Err8:
+				name = "Missing Right BRACKET";
+				break;
+			case cc0::Err9:
+				name = "Wrong number of parameters passed in";
+				break;
+			case cc0::Err10:
+				name = "main function missing";
+				break;
+			case cc0::Err11:
+				name = "The function has already been declared";
+				break;
+			case cc0::Err12:
+				name = "Missing Left brace";
+				break;
+			case cc0::Err13:
+				name = "Missing function name";
+				break;
+			case cc0::Err14:
+				name = "Missing int or void type";
+				break;
+			case cc0::Err15:
+				name = "Missing int type";
+				break;
+			case cc0::Err16:
+				name = "Missing Right brace";
+				break;
+			case cc0::Err17:
+				name = "Function has not been declared";
+				break;
+			case cc0::Err18:
+				name = "Incomplete statement";
+				break;
+			case cc0::Err19:
+				name = "You cannot use a return statement with no value in a non-void function.";
+				break;
+			case cc0::Err20:
+				name = "You cannot use a return statement with a value in a function with a return type void";
+				break;
+			
 			}	
+			
+
 			return format_to(ctx.out(), name);
 		}
 	};

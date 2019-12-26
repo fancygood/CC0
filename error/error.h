@@ -38,7 +38,27 @@ namespace cc0 {
 		ErrInvalidAssignment,
 		ErrInvalidPrint,
 
-		ErrLeadingZero
+		ErrLeadingZero,
+		Err1,
+		Err2,
+		Err3,
+		Err4,
+		Err5,
+		Err6,
+		Err7,
+		Err8,
+		Err9,
+		Err10,
+		Err11,
+		Err12,
+		Err13,
+		Err14,
+		Err15,
+		Err16,
+		Err17,
+		Err18,
+		Err19,
+		Err20
 	};
 
 	class CompilationError final{

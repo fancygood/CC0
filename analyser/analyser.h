@@ -12,11 +12,11 @@
 #include <cstddef> // for std::size_t
 
 //指令字符串数组
-extern std::string command[20][1000];
+extern std::string command[20][10000];
 extern int order;
 //二进制指令字符串数组
 extern std::string TwoCommand[3];
-extern std::string TwoFuncCommand[20][1000];
+extern std::string TwoFuncCommand[20][10000];
 extern int Torder;
 
 namespace cc0 {

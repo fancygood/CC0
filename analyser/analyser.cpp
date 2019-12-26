@@ -3,11 +3,11 @@
 #include <climits>
 #include <sstream>
 
-std::string command[20][1000];
+std::string command[20][10000];
 int order;
 
 std::string TwoCommand[3];
-std::string  TwoFuncCommand[20][1000];
+std::string  TwoFuncCommand[20][10000];
 int Torder;
 
 namespace cc0 {
@@ -134,7 +134,7 @@ namespace cc0 {
 						break;
 					}
 					if(NowLevel == 1)//函数里面不可再定义函数
-						return std::make_optional<CompilationError>(_current_pos, ErrorCode::ErrNoSemicolon);
+						return std::make_optional<CompilationError>(_current_pos, ErrorCode::Err1);
 				}
 				//如果是变量声明
 				else if(next.value().GetType() == TokenType::EQUAL_SIGN 
@@ -168,7 +168,7 @@ namespace cc0 {
 		auto next = nextToken();
 		if (!next.has_value() || next.value().GetType() != TokenType::INT) {
 			//这里还要修改报错信息，没有INT。
-			return std::make_optional<CompilationError>(_current_pos, ErrorCode::ErrNeedIdentifier);
+			return std::make_optional<CompilationError>(_current_pos, ErrorCode::Err2);
 		}
 		while (true) {
 
@@ -410,7 +410,7 @@ namespace cc0 {
 		auto next = nextToken();
 		auto prefix = 1;
 		if (!next.has_value())//这个报错要改
-			return std::make_optional<CompilationError>(_current_pos, ErrorCode::ErrIncompleteExpression);
+			return std::make_optional<CompilationError>(_current_pos, ErrorCode::Err3);
 		
 		if (next.value().GetType() == TokenType::PLUS_SIGN)
 			prefix = 1;
@@ -421,22 +421,34 @@ namespace cc0 {
 		//预读
 		next = nextToken();
 		if (!next.has_value())
-			return std::make_optional<CompilationError>(_current_pos, ErrorCode::ErrIncompleteExpression);
+			return std::make_optional<CompilationError>(_current_pos, ErrorCode::Err3);
 		switch (next.value().GetType()) {
 			case IDENTIFIER:{
 				//先看看是否是函数名
 				//若是函数名
-				if(isFunctionName(next.value().GetValueString()) && !isDeclared(next.value().GetValueString())) {
+				next = nextToken();
+				//if(isFunctionName(next.value().GetValueString()) /*&& !isDeclared(next.value().GetValueString())*/) {
+					//是函数名
+				if(next.value().GetType() == TokenType::LEFT_BRACKET){
+					unreadToken();
+					unreadToken();
+					next = nextToken();
+					if(!isFunctionName(next.value().GetValueString()))
+						return std::make_optional<CompilationError>(_current_pos, ErrorCode::Err4);
 					std::string stype = getFunctionType(next.value().GetValueString());
 					if(stype == "void")
 					//这个报错要改，用void函数进行运算了
-						return std::make_optional<CompilationError>(_current_pos, ErrorCode::ErrIncompleteExpression);
+						return std::make_optional<CompilationError>(_current_pos, ErrorCode::Err5);
 
 					auto err = analyseFunctionCall(next.value().GetValueString());
 					if(err.has_value())
 						return err;
 				}
-				else {
+				//if(isDeclared(next.value().GetValueString())) {
+				else{
+					unreadToken();
+					unreadToken();
+					next = nextToken();
 					//若不是函数名
 					//看看他是否声明过
 					if(!isDeclared(next.value().GetValueString())){
@@ -483,8 +495,8 @@ namespace cc0 {
 			}
 			case HEXADECIMAL_LITERAL:{
 				std::string s = next.value().GetValueString();
-				if(s.length() > 10)
-					return std::make_optional<CompilationError>(_current_pos, ErrorCode::ErrIntegerOverflow);
+				//if(s.length() > 10)
+				//	return std::make_optional<CompilationError>(_current_pos, ErrorCode::ErrIntegerOverflow);
 				command[numberFunction][order] = std::to_string(order) + "\t" + "ipush " + s; order++;
 				std::string s1 =  SixteenToSixteen(s,8);
 				if(numberFunction == 1){
@@ -527,14 +539,14 @@ namespace cc0 {
 	std::optional<CompilationError> Analyser::analyseFunctionCall(const std::string&functionName) {
 		//查找函数内部有没有与函数名同名的变量名，如果有，报错不能进行函数调用
 		for(int i = 0;i<1000;i++){
-			if(SL[i].name == functionName)
-				return std::make_optional<CompilationError>(_current_pos, ErrorCode::ErrIncompleteExpression);
+			if(SL[i].name == functionName && SL[i].level == 1)
+				return std::make_optional<CompilationError>(_current_pos, ErrorCode::Err6);
 		}
 
 		int parametersnumber = 0;
 		auto next = nextToken();
 		if(!next.has_value() || next.value().GetType() != TokenType::LEFT_BRACKET)
-			return std::make_optional<CompilationError>(_current_pos, ErrorCode::ErrIncompleteExpression);
+			return std::make_optional<CompilationError>(_current_pos, ErrorCode::Err7);
 		//如果next是)
 		next = nextToken();
 		if(next.value().GetType() == TokenType::RIGHT_BRACKET)
@@ -555,12 +567,12 @@ namespace cc0 {
 					break;
 				}
 				else
-					return std::make_optional<CompilationError>(_current_pos, ErrorCode::ErrIncompleteExpression);
+					return std::make_optional<CompilationError>(_current_pos, ErrorCode::Err8);
 			}
 		}
 		if(parametersnumber != getParametersNumber(functionName))
 		//报错要改，传入的参数个数错误。
-			return std::make_optional<CompilationError>(_current_pos, ErrorCode::ErrIncompleteExpression);
+			return std::make_optional<CompilationError>(_current_pos, ErrorCode::Err9);
 		else
 		{
 			int index = getFunctionIndex(functionName);
@@ -588,7 +600,7 @@ namespace cc0 {
 			if(!next.has_value()) {
 				//寻找main函数
 				if(!isFunctionName("main"))
-					return std::make_optional<CompilationError>(_current_pos, ErrorCode::ErrIncompleteExpression);
+					return std::make_optional<CompilationError>(_current_pos, ErrorCode::Err10);
 				else 
 					return {};
 			}			
@@ -600,7 +612,7 @@ namespace cc0 {
 					
 					//判断函数名是否在0级被声明过
 					if(FunctionIsDeclared(FunctionName))//被声明过
-						return std::make_optional<CompilationError>(_current_pos, ErrorCode::ErrNoEnd); 
+						return std::make_optional<CompilationError>(_current_pos, ErrorCode::Err11); 
 
 					//将函数放进常量表
 					addFunctionToConstTable(FunctionName);
@@ -622,7 +634,7 @@ namespace cc0 {
 						//读入{
 						next = nextToken();
 						if(!next.has_value() || next.value().GetType() != TokenType::LEFT_BRACE)//缺少左大括号
-							return std::make_optional<CompilationError>(_current_pos, ErrorCode::ErrNoEnd);
+							return std::make_optional<CompilationError>(_current_pos, ErrorCode::Err12);
 						//进入复合语句
 						auto err2 = analyseCompoundStatement();
 						if(err2.has_value())
@@ -665,15 +677,15 @@ namespace cc0 {
 						//////////////////////////////////////////////函数完毕
 					}
 					else//缺少左括号
-						return std::make_optional<CompilationError>(_current_pos, ErrorCode::ErrNoSemicolon);
+						return std::make_optional<CompilationError>(_current_pos, ErrorCode::Err7);
 				}
 				else{//报错要改，缺少函数名
-					return std::make_optional<CompilationError>(_current_pos, ErrorCode::ErrAssignToConstant);
+					return std::make_optional<CompilationError>(_current_pos, ErrorCode::Err13);
 				}
 			}
 			else {
 				//报错要改，不是个类型
-				return std::make_optional<CompilationError>(_current_pos, ErrorCode::ErrLeadingZero);
+				return std::make_optional<CompilationError>(_current_pos, ErrorCode::Err14);
 			}
 		}
 	}
@@ -706,7 +718,7 @@ namespace cc0 {
 					else if(next.value().GetType() == TokenType::RIGHT_BRACKET)
 						return{};
 					else//报错要改，没有逗号或者右括号
-						return std::make_optional<CompilationError>(_current_pos, ErrorCode::ErrNeedIdentifier);
+						return std::make_optional<CompilationError>(_current_pos, ErrorCode::Err8);
 				}
 				else
 					return std::make_optional<CompilationError>(_current_pos, ErrorCode::ErrNeedIdentifier);
@@ -720,7 +732,7 @@ namespace cc0 {
 					continue;
 				}
 				else {//缺少类型标识符INT
-					return std::make_optional<CompilationError>(_current_pos, ErrorCode::ErrNeedIdentifier);
+					return std::make_optional<CompilationError>(_current_pos, ErrorCode::Err15);
 				}
 			}
 
@@ -751,7 +763,7 @@ namespace cc0 {
 		while(true) {
 			auto next = nextToken();
 			if(!next.has_value())//缺少右大括号
-				return std::make_optional<CompilationError>(_current_pos, ErrorCode::ErrIncompleteExpression);
+				return std::make_optional<CompilationError>(_current_pos, ErrorCode::Err16);
 			//如果是右大括号，说明语句序列结束，函数结束。
 			if(next.value().GetType() == TokenType::RIGHT_BRACE) {
 				//语句序列结束,返回。
@@ -771,7 +783,7 @@ namespace cc0 {
 	std::optional<CompilationError> Analyser::analyseStatement() {
 		auto next = nextToken();
 		if(!next.has_value())//缺少右大括号
-			return std::make_optional<CompilationError>(_current_pos, ErrorCode::ErrIncompleteExpression);
+			return std::make_optional<CompilationError>(_current_pos, ErrorCode::Err16);
 		//如果是左大括号，说明是语句序列。
 		if(next.value().GetType() == TokenType::LEFT_BRACE) {
 			auto err = analyseStatementSeq();
@@ -821,7 +833,7 @@ namespace cc0 {
 			else if(next.value().GetType() == TokenType::LEFT_BRACKET) {
 				//看这个标识符的名称是否是函数名
 				if(!isFunctionName(sname))//函数没有被定义过，这不是一个函数名
-					return std::make_optional<CompilationError>(_current_pos, ErrorCode::ErrNoEnd);
+					return std::make_optional<CompilationError>(_current_pos, ErrorCode::Err17);
 				unreadToken();//该读左小括号
 				//函数调用
 				auto err = analyseFunctionCall(sname);
@@ -834,7 +846,7 @@ namespace cc0 {
 				return {};
 			}
 			else 
-				return std::make_optional<CompilationError>(_current_pos, ErrorCode::ErrNoSemicolon);
+				return std::make_optional<CompilationError>(_current_pos, ErrorCode::Err18);
 		}
 		//如果是if，则是条件语句
 		else if(next.value().GetType() == TokenType::IF) {
@@ -854,7 +866,7 @@ namespace cc0 {
 		else if(next.value().GetType() == TokenType::PRINT) {
 			auto next = nextToken();
 			if(!next.has_value() || next.value().GetType() != TokenType::LEFT_BRACKET)//缺少左括号
-				return std::make_optional<CompilationError>(_current_pos, ErrorCode::ErrIncompleteExpression);
+				return std::make_optional<CompilationError>(_current_pos, ErrorCode::Err7);
 			auto err = analysePrintableList();
 			if(err.has_value())
 				return err;
@@ -867,7 +879,7 @@ namespace cc0 {
 		else if(next.value().GetType() == TokenType::SCAN) {
 			auto next = nextToken();
 			if(!next.has_value() || next.value().GetType() != TokenType::LEFT_BRACKET)//缺少左括号
-				return std::make_optional<CompilationError>(_current_pos, ErrorCode::ErrIncompleteExpression);
+				return std::make_optional<CompilationError>(_current_pos, ErrorCode::Err7);
 			next = nextToken();
 			if(!next.has_value() || next.value().GetType() != TokenType::IDENTIFIER)
 				return std::make_optional<CompilationError>(_current_pos, ErrorCode::ErrNeedIdentifier);
@@ -892,7 +904,7 @@ namespace cc0 {
 			//检查有没有右括号
 			next = nextToken();
 			if(!next.has_value() || next.value().GetType() != TokenType::RIGHT_BRACKET)//缺少右括号
-				return std::make_optional<CompilationError>(_current_pos, ErrorCode::ErrIncompleteExpression);
+				return std::make_optional<CompilationError>(_current_pos, ErrorCode::Err8);
 			//检查有没有;
 			next = nextToken();
 			if(next.value().GetType() != TokenType::SEMICOLON)
@@ -912,7 +924,7 @@ namespace cc0 {
 					 TwoFuncCommand[numberFunction][Torder] = "88"; Torder++;
 					}
 				else//不能在非void函数中使用无值的返回语句。
-					return std::make_optional<CompilationError>(_current_pos, ErrorCode::ErrNoSemicolon);
+					return std::make_optional<CompilationError>(_current_pos, ErrorCode::Err19);
 			}
 			else {
 				unreadToken();
@@ -924,7 +936,7 @@ namespace cc0 {
 					 TwoFuncCommand[numberFunction][Torder] = "89"; Torder++;
 					}
 				else //不能在返回类型为void的函数中使用有值的返回语句
-					return std::make_optional<CompilationError>(_current_pos, ErrorCode::ErrNoEnd);
+					return std::make_optional<CompilationError>(_current_pos, ErrorCode::Err20);
 				next = nextToken();
 				if(next.value().GetType() != TokenType::SEMICOLON)
 					return std::make_optional<CompilationError>(_current_pos, ErrorCode::ErrNoSemicolon);
@@ -933,7 +945,7 @@ namespace cc0 {
 		}
 
 		else//缺少右大括号
-			return std::make_optional<CompilationError>(_current_pos, ErrorCode::ErrIncompleteExpression);
+			return std::make_optional<CompilationError>(_current_pos, ErrorCode::Err16);
 	}
 
 	//条件语句
@@ -942,7 +954,7 @@ namespace cc0 {
 		int	beforeIf = -1,endIf = -1;			int	TbeforeIf = -1,TendIf = -1;
 		auto next = nextToken();
 		if(next.value().GetType() != TokenType::LEFT_BRACKET)//缺少左括号
-			return std::make_optional<CompilationError>(_current_pos, ErrorCode::ErrIncompleteExpression);
+			return std::make_optional<CompilationError>(_current_pos, ErrorCode::Err7);
 		//跳转到条件子程序
 		auto err1 = analyseCondition(beforeIf,TbeforeIf);
 		if(err1.has_value())
@@ -1022,7 +1034,7 @@ namespace cc0 {
 			return {};
 		}
 		else //缺少右括号
-			return std::make_optional<CompilationError>(_current_pos, ErrorCode::ErrIncompleteExpression);
+			return std::make_optional<CompilationError>(_current_pos, ErrorCode::Err8);
 		//后一个表达式
 		auto err2 = analyseAdditiveExpression();
 		if(err2.has_value())
@@ -1063,7 +1075,7 @@ namespace cc0 {
 		//检查右小括号
 		next = nextToken();
 		if(next.value().GetType() != TokenType::RIGHT_BRACKET)
-			return std::make_optional<CompilationError>(_current_pos, ErrorCode::ErrIncompleteExpression);
+			return std::make_optional<CompilationError>(_current_pos, ErrorCode::Err8);
 		return {};
 	}
 
@@ -1073,7 +1085,7 @@ namespace cc0 {
 		int	whileBegin = -1,whileEnd = -1;			int	TwhileBegin = -1,TwhileEnd = -1;
 		auto next = nextToken();
 		if(next.value().GetType() != TokenType::LEFT_BRACKET)//缺少左括号
-			return std::make_optional<CompilationError>(_current_pos, ErrorCode::ErrIncompleteExpression);
+			return std::make_optional<CompilationError>(_current_pos, ErrorCode::Err7);
 		
 		//先记录一下一会跳转回来回到的位置,whileend时进行的跳转
 		whileEnd = order;		TwhileEnd = order;
@@ -1134,7 +1146,7 @@ namespace cc0 {
 				return {};
 			}
 			else //缺少右括号。
-				return std::make_optional<CompilationError>(_current_pos, ErrorCode::ErrIncompleteExpression);
+				return std::make_optional<CompilationError>(_current_pos, ErrorCode::Err8);
 		}
 		
 	}
@@ -1330,12 +1342,12 @@ namespace cc0 {
 			if(FunctionTable[i].name == s){
 				return true;
 			}
-		}
+		}/*
 		for(int i = 0;i<1000;i++) {
 			if(SL[i].name == s && SL[i].level == 0){
 				return true;
 			}
-		}
+		}*/
 		return false;
 	}
 
