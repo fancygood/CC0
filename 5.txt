@@ -1,0 +1,29 @@
+const int a = 1,b = 0Xdeadbeef,c = 21;
+int a1 = a + 1;int b1 = b + 1;int c3  = 2994702;
+int F(int a){
+	int b = a;
+	if(a >= 0){
+		if(a){
+			b = c+b-1;
+			if(b>0)
+		}
+			
+	}
+	else
+		return b-a;
+}
+int sfhioea(){
+	int a = F(23);
+	int F = 4;
+	while(F){
+		F = F - 1;
+		print(a,F);
+	}
+	
+}
+int main(){
+	int f = b1 -b;
+	sfhioea();
+	print(f);
+	
+}

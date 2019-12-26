@@ -1,0 +1,5 @@
+const int a = 1,b = 0x00123,c = 21;
+int a1 = a + 1;int b1 = b + 1;
+int main(){
+	int f = b1 -b;
+}

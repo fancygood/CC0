@@ -1,0 +1,32 @@
+int x = -19919;
+int y = -0x8ade;
+int z = 1+ -6;
+int o = 199 / 8;
+int p = 0x11;
+int q = 10086;
+int change = 1;
+int multi() {
+    return x + (o - -y + +p / -z) * q;
+}
+int change(int x) {
+    int loop = 10;
+    int change = 2;
+    while (loop > 0) {
+        loop = loop - 1;
+        x = x + 2;
+        x = x / 3;
+    }
+    return change;
+}
+int jiecheng(int q) {
+    if (q == 1) {
+        return 1;
+    }
+    else {
+        return q * jiecheng(q - 1);
+    }
+}
+int main() {
+    print((multi() - change(multi())) / jiecheng(5));
+    return 0;
+}

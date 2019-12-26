@@ -1,0 +1,9 @@
+const int  x = 123;
+void fun() {
+return;
+}
+
+int main() {
+    int a = fun();
+    return 0;
+}
